@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useQuery } from "react-query";
 import axios from "axios";
 import { formatDate } from "src/utils/formatDate";
 import { Avatar } from "../Avatar";
 import { Comment } from "../Comment/Comment";
-import { Author, CommentEntity, CommentWithAuthor } from "./types";
+import { Author, CommentEntity, CommentQueryData, CommentWithAuthor } from "./types";
 import { HeartIcon } from "../HeartIcon";
 
 const Header = styled.div`
@@ -22,7 +22,6 @@ const Header = styled.div`
 
 
 const ImageWrapper = styled.div`
-// cursor: pointer;
 display: flex;
 
   /* Add styles for image wrapper here */
@@ -60,6 +59,11 @@ const PageButton = styled.button`
   border-radius: 4px;
   backdrop-filter: blur(27px);
   background: rgb(49, 52, 57);
+
+  &:disabled {
+    opacity: 0.5; 
+    pointer-events: ; 
+  }
 `;
 
 const Text = styled.div`
@@ -70,63 +74,99 @@ const Text = styled.div`
   line-height: 22px;
 `;
 
-const fetchAuthors = async () => {
-  const response = await axios.get("/api/authors");
-  return response.data;
-};
-
-const fetchComments = async (page: number) => {
-  const response = await axios.get("/api/comments", { params: { page } });
-  return response.data.data;
-};
 
 const transformComments = (
   comments: CommentEntity[],
   authors: Author[]
 ): CommentWithAuthor[] => {
-  return comments.map(comment => {
+  const commentMap = new Map<number, CommentWithAuthor>();
+
+  comments.forEach(comment => {
     const author = authors.find(author => author.id === comment.author) || {
       id: 0,
       name: "",
       avatar: ""
     };
-    return {
+
+    const commentWithAuthor: CommentWithAuthor = {
       ...comment,
       author,
       child_comments: []
     };
+
+    commentMap.set(comment.id, commentWithAuthor);
   });
+
+  const rootComments: CommentWithAuthor[] = [];
+
+  commentMap.forEach(comment => {
+    const parentComment = commentMap.get(comment.parent);
+
+    if (parentComment) {
+      parentComment.child_comments.push(comment);
+    } else {
+      rootComments.push(comment);
+    }
+  });
+
+  return rootComments;
+};
+
+console.log('transformComments', transformComments);
+
+const fetchAuthors = async () => {
+  const response = await axios.get("/api/authors");
+  return response.data;
+};
+
+
+const fetchComments = async (page: number) => {
+  const response = await axios.get("/api/comments", { params: { page } });
+  return response.data;
 };
 
 export const Comments = () => {
-  const [isHeartActive, setIsHeartActive] = useState(false); // Состояние для отслеживания активации сердца
+  const [isHeartActive, setIsHeartActive] = useState(false);
 
   const handleHeartClick = () => {
-
     setIsHeartActive(!isHeartActive);
   };
 
-  const [currentPage, setCurrentPage] = useState(1); // Define currentPage here
+  const defaultDataComments: CommentQueryData = { data: [], pagination: { page: 0, size: 0, total_pages: 0 } };
+
+
+  const [currentPage, setCurrentPage] = useState(1);
   const { data: authors } = useQuery<Author[]>("authors", fetchAuthors);
-  const { data: comments, isLoading, isError } = useQuery<CommentEntity[]>(
+  const { data: dataComments = defaultDataComments, isLoading, isError } = useQuery<CommentQueryData, Error, CommentQueryData>(
     ["comments", currentPage],
     () => fetchComments(currentPage),
     {
-      staleTime: Infinity
+      staleTime: Infinity,
+      refetchOnWindowFocus: false
     }
   );
+  const isNoMoreComments = dataComments.pagination && dataComments.pagination.page < dataComments.pagination.total_pages
 
-  const totalPages = 1; // Just an example, replace it with your logic
+  const [transformedComments, setTransformedComments] = useState<CommentWithAuthor[]>([]);
 
-  const transformedComments = useMemo(() => transformComments(comments || [], authors || []), [comments, authors]);
+  useEffect(() => {
+    if (!isLoading) {
+      setTransformedComments(prevComments => [...prevComments, ...transformComments(dataComments.data || [], authors || [])]);
+    }
+  }, [dataComments, authors, isLoading, currentPage]);
+
 
   const totalComments = 150;
+
+
 
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error fetching data</div>;
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handlePageChange = () => {
+    if (dataComments && isNoMoreComments) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   return (
@@ -151,19 +191,15 @@ export const Comments = () => {
 
       <CommentsList>
         {transformedComments.map((comment: CommentWithAuthor) => (
-          <Comment key={comment.id} comment={comment} />
+          <Comment key={comment.id} comment={comment} depth={0} />
         ))}
       </CommentsList>
       <div>
-        {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-          (page) => (
-            <PageButton key={page} onClick={() => handlePageChange(page)}>
-              <Text>
-                {'Загрузить ещё'}
-              </Text>
-            </PageButton>
-          )
-        )}
+        <PageButton onClick={handlePageChange} disabled={dataComments && !isNoMoreComments}>
+          <Text>
+            {'Загрузить ещё'}
+          </Text>
+        </PageButton>
       </div>
     </>
   );

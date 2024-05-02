@@ -13,7 +13,21 @@ export type CommentEntity = {
   likes: number
 }
 
+
 export type CommentWithAuthor = {
   author: Author;
   child_comments: CommentWithAuthor[];
 } & Omit<CommentEntity, 'author'>;
+
+
+export type Pagination = {
+  page: number
+  size: number
+  total_pages: number
+}
+
+
+export type CommentQueryData = {
+  data: CommentEntity[]
+  pagination?: Pagination
+}

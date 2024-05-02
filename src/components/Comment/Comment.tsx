@@ -7,6 +7,7 @@ import { HeartIcon } from "../HeartIcon";
 
 interface CommentProps {
   comment: CommentWithAuthor;
+  depth?: number;
 }
 
 const CommentContainer = styled.div`
@@ -86,42 +87,51 @@ const HeartIconWrapper = styled.div`
   cursor: pointer;
 `;
 
-export const Comment = memo(({ comment }: CommentProps) => {
-  const [isHeartActive, setIsHeartActive] = useState(false); // Состояние для отслеживания активации сердца
-  const [isLiked, setIsLiked] = useState(false); // Локальное состояние для отслеживания лайка
-  const [likes, setLikes] = useState(comment.likes); // Состояние для хранения количества лайков
-
+export const Comment = memo(({ comment, depth = 0 }: CommentProps) => {
+  const [isHeartActive, setIsHeartActive] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likes, setLikes] = useState(comment.likes);
   const handleHeartClick = () => {
     setIsLiked(!isLiked);
     setLikes((prevLikes) => prevLikes + (isLiked ? -1 : 1));
     setIsHeartActive(!isHeartActive);
   };
 
+  const nextDepth = depth === 0 ? depth + 1 : depth;
+
+
   return (
-    <CommentContainer className="comment">
-      <AvatarColumn>
-        <Avatar size={68} src={comment.author?.avatar} />
-      </AvatarColumn>
-      <ProfileColumn>
-        <AuthorName>{comment.author?.name}</AuthorName>
-        <Time>{formatDate(comment.created)}</Time>
-      </ProfileColumn>
-      <ImageWrapperColumn>
-        <HeartIconWrapper>
-          <HeartIcon
-            isActive={isHeartActive}
-            onClick={handleHeartClick}
-            borderColorActive="#D44F4F"
-            borderColorNoActive="#D44F4F"
-            fillActive="#D44F4F"
-            fillNoActive="none"
-          />
-        </HeartIconWrapper>
-        <CountLikes>
-          {likes}
-        </CountLikes>
-      </ImageWrapperColumn>
-      <CommentText >{comment.text}</CommentText>
-    </CommentContainer>
+    <>
+      <CommentContainer className="comment" style={{ marginLeft: depth > 0 ? `${depth * 34}px` : 0 }}>
+        <AvatarColumn>
+          <Avatar size={68} src={comment.author?.avatar} />
+        </AvatarColumn>
+        <ProfileColumn>
+          <AuthorName>{comment.author?.name}</AuthorName>
+          <Time>{formatDate(comment.created)}</Time>
+        </ProfileColumn>
+        <ImageWrapperColumn>
+          <HeartIconWrapper>
+            <HeartIcon
+              isActive={isHeartActive}
+              onClick={handleHeartClick}
+              borderColorActive="#D44F4F"
+              borderColorNoActive="#D44F4F"
+              fillActive="#D44F4F"
+              fillNoActive="none"
+            />
+          </HeartIconWrapper>
+          <CountLikes>
+            {likes}
+          </CountLikes>
+        </ImageWrapperColumn>
+        <CommentText >{comment.text}</CommentText>
+
+      </CommentContainer>
+      {comment.child_comments.map((childComment) => (
+        <Comment key={childComment.id} comment={childComment} depth={nextDepth} />
+      ))}
+    </>
+
   );
 });

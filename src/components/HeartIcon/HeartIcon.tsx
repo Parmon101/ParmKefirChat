@@ -33,8 +33,8 @@ export const HeartIcon = ({
         y2="21.281290"
         gradientUnits="userSpaceOnUse"
       >
-        <stop stop-color="#D44F4F" />
-        <stop offset="1.000000" stop-color="#B43333" />
+        <stop stopColor="#D44F4F" />
+        <stop offset="1.000000" stopColor="#B43333" />
       </linearGradient>
       <linearGradient
         id="paint_linear_5_5_1"
@@ -44,8 +44,8 @@ export const HeartIcon = ({
         y2="21.281290"
         gradientUnits="userSpaceOnUse"
       >
-        <stop stop-color="#59D44F" />
-        <stop offset="1.000000" stop-color="#36B433" />
+        <stop stopColor="#59D44F" />
+        <stop offset="1.000000" stopColor="#36B433" />
       </linearGradient>
       <linearGradient
         id="paint_linear_5_5_2"
@@ -55,8 +55,8 @@ export const HeartIcon = ({
         y2="21.281290"
         gradientUnits="userSpaceOnUse"
       >
-        <stop stop-color="#D44F4F" />
-        <stop offset="1.000000" stop-color="#B43333" />
+        <stop stopColor="#D44F4F" />
+        <stop offset="1.000000" stopColor="#B43333" />
       </linearGradient>
     </defs>
 
@@ -64,8 +64,8 @@ export const HeartIcon = ({
       id="Vector"
       d="M0.15 6.96C-0.2 5.47 -0.1 2.72 1.95 1.45C6.45 -1.37 8.97 2.95 8.97 2.95L9.02 2.95C9.02 2.95 11.54 -1.37 16.04 1.45C18.09 2.72 18.19 5.47 17.84 6.96C17.37 8.98 15.93 10.26 14.11 12.17C9 17 9 17 9 17C9 17 9 17 3.88 12.17C2.06 10.26 0.62 8.98 0.15 6.96Z"
       stroke={isActive ? borderColorActive : borderColorNoActive}
-      stroke-opacity="1.000000"
-      stroke-width="1.000000"
+      strokeOpacity="1.000000"
+      strokeWidth="1.000000"
     />
   </svg>
 );
