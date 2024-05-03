@@ -7,7 +7,7 @@ interface TextProps {
   lineHeight?: string;
   margin?: string
   color?: string;
-  textAlign?: string
+  alignment?: string
 }
 
 export const Text = styled.div<TextProps>`
@@ -15,10 +15,8 @@ export const Text = styled.div<TextProps>`
   font-size: ${(props) => props.fontSize || "16px"};
   font-weight: ${(props) => props.fontWeight || "700"};
   line-height: ${(props) => props.lineHeight || ""};
-  line-height: ${(props) => props.lineHeight || ""};
   margin: ${(props) => props.margin || ""};
-  text-align: ${(props) => props.textAlign || "left"};
-
+  text-align: ${(props) => props.alignment || "left"};
 
   @media screen and (max-width: 562px) {
     font-size: 14px;

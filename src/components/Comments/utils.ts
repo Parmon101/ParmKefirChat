@@ -34,6 +34,12 @@ export const transformComments = (
     }
   });
 
+  rootComments.sort((a, b) => {
+    const dateA = new Date(a.created);
+    const dateB = new Date(b.created);
+    return dateB.getTime() - dateA.getTime();
+  });
+
   return rootComments;
 };
 

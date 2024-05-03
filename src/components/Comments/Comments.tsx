@@ -36,127 +36,140 @@ const LoaderContainer = styled.div`
   margin-top: 32px;
 `;
 
+const TextRepeat = styled.div`
+  margin-top: 32px;
+`;
 
 export const Comments = () => {
+  const [currentPage, setCurrentPage] = useState(1);
   const [isHeartIconActive, setIsHeartIconActive] = useState(false);
-  const [isLoadingMoreComments, setIsLoadingMoreComments] = useState(false);
-  const [totalLikesCount, setTotalLikesCount] = useState(0);
-  const [totalCommentsCount, setTotalCommentsCount] = useState(0);
+  const [previousComments, setPreviousComments] = useState<CommentEntity[]>([]);
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [retryError, setRetryError] = useState(false);
 
-  const defaultDataComments: CommentQueryData = { data: [], pagination: { page: 0, size: 0, total_pages: 0 } };
 
   const fetchAuthors = async () => {
-    const response = await axios.get("/api/authors");
-    return response.data;
+    try {
+      const response = await axios.get("/api/authors");
+
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка при загрузке комментариев:", error);
+      throw error;
+    }
   };
 
-  const fetchComments = async (page: number) => {
-    const response = await axios.get("/api/comments", { params: { page } });
-    return response.data;
+  const fetchComments = async () => {
+    try {
+      const response = await axios.get("/api/comments", { params: { page: currentPage } });
+
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка при загрузке комментариев:", error);
+      throw error;
+    }
   };
 
-  const [currentPage, setCurrentPage] = useState(1);
   const { data: authors, isLoading: authorsLoading, isError: authorsError } = useQuery<Author[]>("authors", fetchAuthors);
-  const { data: dataComments = defaultDataComments, isLoading: commentsLoading, isError: commentsError } = useQuery<CommentQueryData, Error, CommentQueryData>(
+  const { data: dataComments, isLoading: commentsLoading, isError: commentsError, refetch: refetchComments } = useQuery<CommentQueryData, Error, CommentQueryData>(
     ["comments", currentPage],
-    () => fetchComments(currentPage),
+    () => fetchComments(),
     {
       staleTime: Infinity,
-      refetchOnWindowFocus: false
+      refetchOnWindowFocus: false,
+      retry: false,
+      enabled: !isPageLoaded || retryError
     }
   );
-  const isNoMoreComments = dataComments.pagination && dataComments.pagination.page < dataComments.pagination.total_pages;
 
-  const [transformedComments, setTransformedComments] = useState<CommentWithAuthor[]>([]);
-
+  const isError = commentsError || authorsError
 
   useEffect(() => {
-    if (!commentsLoading && !authorsLoading) {
-      setTransformedComments(prevComments => [...prevComments, ...transformComments(dataComments.data || [], authors || [])]);
-      setIsLoadingMoreComments(false);
+    if (dataComments && dataComments.data && dataComments.data.length > 0) {
+      const newComments = dataComments.data.filter(comment => !previousComments.find(prevComment => prevComment.id === comment.id));
+      if (newComments.length > 0) {
+        setPreviousComments(prev => [...prev, ...newComments]);
+        setIsPageLoaded(true);
+        setRetryError(false);
+      }
     }
-  }, [dataComments, authors, commentsLoading, authorsLoading, currentPage]);
-
-  useEffect(() => {
-    if (!commentsLoading && !authorsLoading) {
-      setTotalCommentsCount(prevTotalComments => prevTotalComments + dataComments.data.length);
-    }
-  }, [dataComments, commentsLoading, authorsLoading]);
-
-  useEffect(() => {
-    if (dataComments && dataComments.data) {
-      const newTotalLikes = calculateTotalLikes(dataComments.data);
-      setTotalLikesCount(prevTotalLikes => prevTotalLikes + newTotalLikes);
-    }
-  }, [dataComments]);
-
-  useEffect(() => {
-    if (authorsError) {
-      console.error("Ошибка при загрузке авторов:", authorsError);
-    }
-  }, [authorsError]);
-
-  useEffect(() => {
-    if (commentsError) {
-      console.error("Ошибка при загрузке комментариев:", commentsError);
-    }
-  }, [commentsError]);
-
-  useEffect(() => {
-    if (!authorsLoading && authors) {
-      // console.log("Авторы успешно загружены:", authors);
-    }
-  }, [authorsLoading, authors]);
-
-  useEffect(() => {
-    if (!commentsLoading && dataComments) {
-      // console.log("Комментарии успешно загружены:", dataComments);
-    }
-  }, [commentsLoading, dataComments]);
+  }, [dataComments, previousComments, currentPage]);
 
   const handleHeartClick = () => {
     setIsHeartIconActive(!isHeartIconActive);
   };
 
   const handlePageChange = () => {
-    if (dataComments && isNoMoreComments) {
-      setIsLoadingMoreComments(true);
-      setCurrentPage(currentPage + 1);
+    setCurrentPage(currentPage + 1);
+    setRetryError(true);
+  };
+
+  const handleRetry = () => {
+    setRetryError(true);
+    refetchComments();
+  };
+
+  const renderContent = () => {
+
+    let comments = [];
+
+    if (currentPage === 1) {
+      comments = dataComments?.data || [];
+    } else {
+      comments = [...previousComments, ...(dataComments?.data || [])];
     }
+
+    const totalLikes = calculateTotalLikes(comments);
+    const transformedComments = transformComments(comments, authors || []);
+    const isNoMoreComments = dataComments && dataComments.pagination && dataComments.pagination.page >= dataComments.pagination.total_pages;
+
+    return (
+      <>
+        <CommentsHeader>
+          <Text fontWeight="700">
+            {comments.length > 0 && <span>{comments.length} комментариев</span>}
+          </Text>
+          <HeartIconWrapper>
+            <HeartIcon
+              isActive={isHeartIconActive}
+              onClick={handleHeartClick}
+              borderColorActive="grey"
+              borderColorNoActive="grey"
+              fillActive="none"
+              fillNoActive="none"
+            />
+            <Text lineHeight="22px" margin="0 0 0 8px">{totalLikes}</Text>
+          </HeartIconWrapper>
+        </CommentsHeader>
+
+        <CommentsContainer>
+          {transformedComments.map((comment: CommentWithAuthor) => (
+            <Comment key={comment.id} comment={comment} depth={0} />
+          ))}
+        </CommentsContainer>
+
+        {(!isNoMoreComments && !isError) &&
+          <Button onClick={handlePageChange} title="Загрузить ещё" disabled={commentsLoading} />
+        }
+
+        {isError &&
+          <TextRepeat>
+            <Text alignment="center">Ошибка при загрузке данных. Попробуйте еще раз.</Text>
+            <Button onClick={handleRetry} title="Попробовать еще раз" />
+          </TextRepeat>
+        }
+
+        {(commentsLoading || authorsLoading) &&
+          <LoaderContainer>
+            <Loader />
+          </LoaderContainer>
+        }
+
+      </>
+    );
   };
 
   return (
-    <>
-      <CommentsHeader>
-        <Text fontWeight="700">
-          {totalCommentsCount && <span>{totalCommentsCount} комментариев</span>}
-        </Text>
-        <HeartIconWrapper>
-          <HeartIcon
-            isActive={isHeartIconActive}
-            onClick={handleHeartClick}
-            borderColorActive="grey"
-            borderColorNoActive="grey"
-            fillActive="none"
-            fillNoActive="none"
-          />
-          <Text lineHeight="22px" margin="0 0 0 8px">{totalLikesCount}</Text>
-        </HeartIconWrapper>
-      </CommentsHeader>
-
-      <CommentsContainer>
-        {transformedComments.map((comment: CommentWithAuthor) => (
-          <Comment key={comment.id} comment={comment} depth={0} />
-        ))}
-      </CommentsContainer>
-
-      {isLoadingMoreComments &&
-        <LoaderContainer>
-          <Loader />
-        </LoaderContainer>
-      }
-
-      <Button onClick={handlePageChange} disabled={dataComments && !isNoMoreComments} title="Загрузить ещё" />
-    </>
+    <>{renderContent()}</>
   );
 };

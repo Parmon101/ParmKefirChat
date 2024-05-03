@@ -37,7 +37,7 @@ const ButtonStyle = styled.button`
 export const Button = ({ title, disabled, onClick }: ButtonProps) => {
   return (
     <ButtonStyle onClick={onClick} disabled={disabled}>
-      <Text fontSize="16px" fontWeight="400" lineHeight="22px" textAlign="center">{title}</Text>
+      <Text fontSize="16px" fontWeight="400" lineHeight="22px" alignment="center">{title}</Text>
     </ButtonStyle>
   );
 };
