@@ -4,6 +4,7 @@ import { Avatar } from "../Avatar";
 import { formatDate } from "src/utils/formatDate";
 import { CommentWithAuthor } from "../Comments/types";
 import { HeartIcon } from "../HeartIcon";
+import { Text } from "../Text";
 
 interface CommentProps {
   comment: CommentWithAuthor;
@@ -28,7 +29,6 @@ const ProfileColumn = styled.div`
   grid-column: 2;
   justify-self: start;
 
-  height: 43px;
 `;
 
 const ImageWrapperColumn = styled.div`
@@ -45,42 +45,7 @@ const CommentText = styled.div`
   grid-row: 2;
   grid-column: span 2 / 4;
 
-  color: rgb(255, 255, 255);
-  font-family: Lato;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 19px;
-  letter-spacing: 0%;
-  text-align: left;
-`;
-
-const AuthorName = styled.div`
-  color: rgb(255, 255, 255);
-  font-family: Lato;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 22px;
-  letter-spacing: 0%;
-  text-align: left;
-  text-transform: uppercase;
-`;
-const Time = styled.div`
-  color: rgb(130, 151, 171);
-  font-family: Lato;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 19px;
-  letter-spacing: 0%;
-  text-align: left;
-`;
-
-
-const CountLikes = styled.div`
-  margin-left: 10px;
-  color: rgb(255, 255, 255);
-  font-family: Lato;
-  font-size: 15px;
-  font-weight: 700;
+  word-wrap: break-word;
 `;
 
 const HeartIconWrapper = styled.div`
@@ -107,8 +72,8 @@ export const Comment = memo(({ comment, depth = 0 }: CommentProps) => {
           <Avatar size={68} src={comment.author?.avatar} />
         </AvatarColumn>
         <ProfileColumn>
-          <AuthorName>{comment.author?.name}</AuthorName>
-          <Time>{formatDate(comment.created)}</Time>
+          <Text lineHeight="22px" fontWeight="700">{comment.author?.name}</Text>
+          <Text color="#8297AB" fontWeight="400" lineHeight="19px">{formatDate(comment.created)}</Text>
         </ProfileColumn>
         <ImageWrapperColumn>
           <HeartIconWrapper>
@@ -121,11 +86,15 @@ export const Comment = memo(({ comment, depth = 0 }: CommentProps) => {
               fillNoActive="none"
             />
           </HeartIconWrapper>
-          <CountLikes>
+          <Text margin="0 0 0 8px">
             {likes}
-          </CountLikes>
+          </Text>
         </ImageWrapperColumn>
-        <CommentText >{comment.text}</CommentText>
+        <CommentText>
+          <Text lineHeight="19px" fontWeight="400">
+            {comment.text}
+          </Text>
+        </CommentText>
 
       </CommentContainer>
       {comment.child_comments.map((childComment) => (

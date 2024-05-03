@@ -2,142 +2,62 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useQuery } from "react-query";
 import axios from "axios";
-import { formatDate } from "src/utils/formatDate";
-import { Avatar } from "../Avatar";
 import { Comment } from "../Comment/Comment";
 import { Author, CommentEntity, CommentQueryData, CommentWithAuthor } from "./types";
 import { HeartIcon } from "../HeartIcon";
+import { Loader } from "../Loader";
+import { Text } from "../Text";
+import { Button } from "../Button";
+import { calculateTotalLikes, transformComments } from "./utils";
 
-const Header = styled.div`
+const CommentsHeader = styled.div`
   display: flex;
-  margin-top: 52px;
   justify-content: space-between; 
-  width: 100%
-
-  justify-content: flex-start;
+  width: 100%;
   align-items: flex-start;
-
   border-bottom: 0.2px solid rgb(118, 118, 118);
 `;
 
-
-const ImageWrapper = styled.div`
-display: flex;
-
-  /* Add styles for image wrapper here */
+const HeartIconWrapper = styled.div`
+  display: flex;
 `;
 
-const СountComments = styled.div`
-  color: rgb(255, 255, 255);
-  font-family: Lato;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 22px;
-`;
-
-const CountLikes = styled.div`
-  margin-left: 10px;
-  color: rgb(255, 255, 255);
-  font-family: Lato;
-  font-size: 15px;
-  font-weight: 700;
-`;
-
-
-const CommentsList = styled.div`
+const CommentsContainer = styled.div`
   > * {
     margin-top: 32px;
-  }
-`;
 
-const PageButton = styled.button`
-  cursor: pointer;
-  width: 234px;
-  height: 36px;
-
-  margin: 60px auto 64px auto;
-  border-radius: 4px;
-  backdrop-filter: blur(27px);
-  background: rgb(49, 52, 57);
-
-  &:disabled {
-    opacity: 0.5; 
-    pointer-events: ; 
-  }
-`;
-
-const Text = styled.div`
-  color: rgb(255, 255, 255);
-  font-family: Lato;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 22px;
-`;
-
-
-const transformComments = (
-  comments: CommentEntity[],
-  authors: Author[]
-): CommentWithAuthor[] => {
-  const commentMap = new Map<number, CommentWithAuthor>();
-
-  comments.forEach(comment => {
-    const author = authors.find(author => author.id === comment.author) || {
-      id: 0,
-      name: "",
-      avatar: ""
-    };
-
-    const commentWithAuthor: CommentWithAuthor = {
-      ...comment,
-      author,
-      child_comments: []
-    };
-
-    commentMap.set(comment.id, commentWithAuthor);
-  });
-
-  const rootComments: CommentWithAuthor[] = [];
-
-  commentMap.forEach(comment => {
-    const parentComment = commentMap.get(comment.parent);
-
-    if (parentComment) {
-      parentComment.child_comments.push(comment);
-    } else {
-      rootComments.push(comment);
+    @media screen and (max-width: 562px) {
+      margin-top: 24px;
     }
-  });
+  }
+`;
 
-  return rootComments;
-};
+const LoaderContainer = styled.div`
+  margin-top: 32px;
+`;
 
-console.log('transformComments', transformComments);
-
-const fetchAuthors = async () => {
-  const response = await axios.get("/api/authors");
-  return response.data;
-};
-
-
-const fetchComments = async (page: number) => {
-  const response = await axios.get("/api/comments", { params: { page } });
-  return response.data;
-};
 
 export const Comments = () => {
-  const [isHeartActive, setIsHeartActive] = useState(false);
-
-  const handleHeartClick = () => {
-    setIsHeartActive(!isHeartActive);
-  };
+  const [isHeartIconActive, setIsHeartIconActive] = useState(false);
+  const [isLoadingMoreComments, setIsLoadingMoreComments] = useState(false);
+  const [totalLikesCount, setTotalLikesCount] = useState(0);
+  const [totalCommentsCount, setTotalCommentsCount] = useState(0);
 
   const defaultDataComments: CommentQueryData = { data: [], pagination: { page: 0, size: 0, total_pages: 0 } };
 
+  const fetchAuthors = async () => {
+    const response = await axios.get("/api/authors");
+    return response.data;
+  };
+
+  const fetchComments = async (page: number) => {
+    const response = await axios.get("/api/comments", { params: { page } });
+    return response.data;
+  };
 
   const [currentPage, setCurrentPage] = useState(1);
-  const { data: authors } = useQuery<Author[]>("authors", fetchAuthors);
-  const { data: dataComments = defaultDataComments, isLoading, isError } = useQuery<CommentQueryData, Error, CommentQueryData>(
+  const { data: authors, isLoading: authorsLoading, isError: authorsError } = useQuery<Author[]>("authors", fetchAuthors);
+  const { data: dataComments = defaultDataComments, isLoading: commentsLoading, isError: commentsError } = useQuery<CommentQueryData, Error, CommentQueryData>(
     ["comments", currentPage],
     () => fetchComments(currentPage),
     {
@@ -145,62 +65,98 @@ export const Comments = () => {
       refetchOnWindowFocus: false
     }
   );
-  const isNoMoreComments = dataComments.pagination && dataComments.pagination.page < dataComments.pagination.total_pages
+  const isNoMoreComments = dataComments.pagination && dataComments.pagination.page < dataComments.pagination.total_pages;
 
   const [transformedComments, setTransformedComments] = useState<CommentWithAuthor[]>([]);
 
+
   useEffect(() => {
-    if (!isLoading) {
+    if (!commentsLoading && !authorsLoading) {
       setTransformedComments(prevComments => [...prevComments, ...transformComments(dataComments.data || [], authors || [])]);
+      setIsLoadingMoreComments(false);
     }
-  }, [dataComments, authors, isLoading, currentPage]);
+  }, [dataComments, authors, commentsLoading, authorsLoading, currentPage]);
 
+  useEffect(() => {
+    if (!commentsLoading && !authorsLoading) {
+      setTotalCommentsCount(prevTotalComments => prevTotalComments + dataComments.data.length);
+    }
+  }, [dataComments, commentsLoading, authorsLoading]);
 
-  const totalComments = 150;
+  useEffect(() => {
+    if (dataComments && dataComments.data) {
+      const newTotalLikes = calculateTotalLikes(dataComments.data);
+      setTotalLikesCount(prevTotalLikes => prevTotalLikes + newTotalLikes);
+    }
+  }, [dataComments]);
 
+  useEffect(() => {
+    if (authorsError) {
+      console.error("Ошибка при загрузке авторов:", authorsError);
+    }
+  }, [authorsError]);
 
+  useEffect(() => {
+    if (commentsError) {
+      console.error("Ошибка при загрузке комментариев:", commentsError);
+    }
+  }, [commentsError]);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error fetching data</div>;
+  useEffect(() => {
+    if (!authorsLoading && authors) {
+      // console.log("Авторы успешно загружены:", authors);
+    }
+  }, [authorsLoading, authors]);
+
+  useEffect(() => {
+    if (!commentsLoading && dataComments) {
+      // console.log("Комментарии успешно загружены:", dataComments);
+    }
+  }, [commentsLoading, dataComments]);
+
+  const handleHeartClick = () => {
+    setIsHeartIconActive(!isHeartIconActive);
+  };
 
   const handlePageChange = () => {
     if (dataComments && isNoMoreComments) {
+      setIsLoadingMoreComments(true);
       setCurrentPage(currentPage + 1);
     }
   };
 
   return (
     <>
-      <Header>
-        <СountComments>
-          {totalComments && <span>{totalComments} комментариев</span>}
-        </СountComments>
-        <ImageWrapper onClick={handleHeartClick}>
+      <CommentsHeader>
+        <Text fontWeight="700">
+          {totalCommentsCount && <span>{totalCommentsCount} комментариев</span>}
+        </Text>
+        <HeartIconWrapper>
           <HeartIcon
-            isActive={isHeartActive}
+            isActive={isHeartIconActive}
             onClick={handleHeartClick}
             borderColorActive="grey"
             borderColorNoActive="grey"
             fillActive="none"
-            fillNoActive="none" />
-          <CountLikes>
-            {8632}
-          </CountLikes>
-        </ImageWrapper>
-      </Header>
+            fillNoActive="none"
+          />
+          <Text lineHeight="22px" margin="0 0 0 8px">{totalLikesCount}</Text>
+        </HeartIconWrapper>
+      </CommentsHeader>
 
-      <CommentsList>
+      <CommentsContainer>
         {transformedComments.map((comment: CommentWithAuthor) => (
           <Comment key={comment.id} comment={comment} depth={0} />
         ))}
-      </CommentsList>
-      <div>
-        <PageButton onClick={handlePageChange} disabled={dataComments && !isNoMoreComments}>
-          <Text>
-            {'Загрузить ещё'}
-          </Text>
-        </PageButton>
-      </div>
+      </CommentsContainer>
+
+      {isLoadingMoreComments &&
+        <LoaderContainer>
+          <Loader />
+        </LoaderContainer>
+      }
+
+      <Button onClick={handlePageChange} disabled={dataComments && !isNoMoreComments} title="Загрузить ещё" />
     </>
   );
 };

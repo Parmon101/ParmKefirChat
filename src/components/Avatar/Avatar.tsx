@@ -10,6 +10,11 @@ interface AvatarProps {
 
 const StyledAvatar = styled.img<AvatarProps>`
   border-radius: 50%;
+
+  @media screen and (max-width: 562px) {
+    width: 40px;
+    height: 40px;
+  }
 `;
 
 export const Avatar = ({ className, src, size = 100, alt = 'avatar' }: AvatarProps) => {

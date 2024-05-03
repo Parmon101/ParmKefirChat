@@ -4,10 +4,23 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { Comments } from './components/Comments';
 
 const StyledApp = styled.div`
-  text-align: center;
-  width: 562px;
-  margin: auto;
-  `;
+    min-width: 272px;
+    max-width: 562px;
+    width: 100%;
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    font-family: Lato;
+`;
+
+const ContentWrapper = styled.div`
+  padding: 52px 24px 64px 24px;
+
+  @media screen and (max-width: 562px) {
+    padding: 32px 24px 76px 24px;
+  }
+`;
 
 function App() {
 
@@ -16,7 +29,9 @@ function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <StyledApp>
-                <Comments />
+                <ContentWrapper>
+                    <Comments />
+                </ContentWrapper>
             </StyledApp>
         </QueryClientProvider>
     );
