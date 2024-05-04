@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/ParmKefirChat/static/css/main.212275fc.css",
+    "main.js": "/ParmKefirChat/static/js/main.40398040.js",
+    "static/media/han-solo.jpg": "/ParmKefirChat/static/media/han-solo.84705bac66e252072c67.jpg",
+    "index.html": "/ParmKefirChat/index.html",
+    "main.212275fc.css.map": "/ParmKefirChat/static/css/main.212275fc.css.map",
+    "main.40398040.js.map": "/ParmKefirChat/static/js/main.40398040.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.212275fc.css",
+    "static/js/main.40398040.js"
+  ]
+}
