@@ -2,7 +2,7 @@ import { memo, useState } from "react";
 import styled from "styled-components";
 import { Avatar } from "../Avatar";
 import { formatDate } from "src/utils/formatDate";
-import { CommentWithAuthor } from "../Comments/types";
+import { CommentWithAuthor } from "../../pages/Comments/types";
 import { HeartIcon } from "../HeartIcon";
 import { Text } from "../Text";
 
@@ -21,6 +21,17 @@ const CommentContainer = styled.div`
 const AvatarColumn = styled.div`
   grid-row: 1;
   grid-column: 1;
+
+  display: flex;
+`;
+
+// INFO добавил вне макета, что бы главный комментарий (без вложенностей) выделялся
+const MainComment = styled.div`
+  background-color: rgb(255, 255, 255, 0.2);
+  width: 4px;
+  height: auto;
+  margin-right: 8px;
+  border-radius: 4px;
 `;
 
 const ProfileColumn = styled.div`
@@ -69,6 +80,7 @@ export const Comment = memo(({ comment, depth = 0 }: CommentProps) => {
     <>
       <CommentContainer className="comment" style={{ marginLeft: depth > 0 ? `${depth * 34}px` : 0 }}>
         <AvatarColumn>
+          {!depth && <MainComment />}
           <Avatar size={68} src={comment.author?.avatar} />
         </AvatarColumn>
         <ProfileColumn>

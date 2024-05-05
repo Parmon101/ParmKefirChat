@@ -10,6 +10,10 @@ interface AvatarProps {
 
 const StyledAvatar = styled.img<AvatarProps>`
   border-radius: 50%;
+  object-fit: cover;
+
+  // INFO добавил вне макета, что бы аватар не сильно сливался с задним фоном
+  border: 1px solid rgb(255, 255, 255, 0.2);
 
   @media screen and (max-width: 562px) {
     width: 40px;

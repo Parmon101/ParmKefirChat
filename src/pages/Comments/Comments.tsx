@@ -2,19 +2,21 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useQuery } from "react-query";
 import axios from "axios";
-import { Comment } from "../Comment/Comment";
+import { Comment } from "../../components/Comment/Comment";
 import { Author, CommentEntity, CommentQueryData, CommentWithAuthor } from "./types";
-import { HeartIcon } from "../HeartIcon";
-import { Loader } from "../Loader";
-import { Text } from "../Text";
-import { Button } from "../Button";
+import { HeartIcon } from "../../components/HeartIcon";
+import { Loader } from "../../components/Loader";
+import { Text } from "../../components/Text";
+import { Button } from "../../components/Button";
 import { calculateTotalLikes, transformComments } from "./utils";
+import { Skeleton } from "../../components/Skeleton";
 
 const CommentsHeader = styled.div`
   display: flex;
   justify-content: space-between; 
   width: 100%;
   align-items: flex-start;
+  padding-bottom: 10px;
   border-bottom: 0.2px solid rgb(118, 118, 118);
 `;
 
@@ -23,6 +25,8 @@ const HeartIconWrapper = styled.div`
 `;
 
 const CommentsContainer = styled.div`
+  min-width: 100%;
+
   > * {
     margin-top: 32px;
 
@@ -39,6 +43,7 @@ const LoaderContainer = styled.div`
 const TextRepeat = styled.div`
   margin-top: 32px;
 `;
+
 
 export const Comments = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -126,26 +131,38 @@ export const Comments = () => {
     return (
       <>
         <CommentsHeader>
-          <Text fontWeight="700">
-            {comments.length > 0 && <span>{comments.length} комментариев</span>}
-          </Text>
-          <HeartIconWrapper>
-            <HeartIcon
-              isActive={isHeartIconActive}
-              onClick={handleHeartClick}
-              borderColorActive="grey"
-              borderColorNoActive="grey"
-              fillActive="none"
-              fillNoActive="none"
-            />
-            <Text lineHeight="22px" margin="0 0 0 8px">{totalLikes}</Text>
-          </HeartIconWrapper>
+          {!commentsLoading &&
+            <>
+              <Text fontWeight="700" lineHeight="22px">
+                {comments.length > 0 && <span>{comments.length} комментариев</span>}
+              </Text>
+              <HeartIconWrapper>
+                <HeartIcon
+                  isActive={isHeartIconActive}
+                  onClick={handleHeartClick}
+                  borderColorActive="grey"
+                  borderColorNoActive="grey"
+                  fillActive="none"
+                  fillNoActive="none"
+                />
+                <Text lineHeight="22px" margin="0 0 0 8px">{totalLikes}</Text>
+              </HeartIconWrapper>
+            </>
+          }
+
+          {commentsLoading &&
+            <>
+              <Skeleton width="150px" />
+              <Skeleton width="70px" />
+            </>}
         </CommentsHeader>
 
         <CommentsContainer>
           {transformedComments.map((comment: CommentWithAuthor) => (
             <Comment key={comment.id} comment={comment} depth={0} />
           ))}
+
+          {commentsLoading && Array.from({ length: 8 }).map((_, index) => <Skeleton height="68px" />)}
         </CommentsContainer>
 
         {(!isNoMoreComments && !isError) &&

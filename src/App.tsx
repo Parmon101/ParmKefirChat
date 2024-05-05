@@ -1,15 +1,13 @@
 import styled from 'styled-components';
 import { QueryClient, QueryClientProvider } from "react-query";
 
-import { Comments } from './components/Comments';
+import { Comments } from './pages/Comments';
 
 const StyledApp = styled.div`
     min-width: 272px;
     max-width: 562px;
     width: 100%;
     margin: auto;
-    display: flex;
-    justify-content: center;
     text-align: center;
     font-family: Lato;
 `;
