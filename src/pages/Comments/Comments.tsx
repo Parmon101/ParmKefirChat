@@ -133,7 +133,7 @@ export const Comments = () => {
         <CommentsHeader>
           {!commentsLoading &&
             <>
-              <Text fontWeight="700" lineHeight="22px">
+              <Text fontWeight="700" line="22px">
                 {comments.length > 0 && <span>{comments.length} комментариев</span>}
               </Text>
               <HeartIconWrapper>
@@ -145,7 +145,7 @@ export const Comments = () => {
                   fillActive="none"
                   fillNoActive="none"
                 />
-                <Text lineHeight="22px" margin="0 0 0 8px">{totalLikes}</Text>
+                <Text line="22px" margin="0 0 0 8px">{totalLikes}</Text>
               </HeartIconWrapper>
             </>
           }
@@ -162,7 +162,7 @@ export const Comments = () => {
             <Comment key={comment.id} comment={comment} depth={0} />
           ))}
 
-          {commentsLoading && Array.from({ length: 8 }).map((_, index) => <Skeleton height="68px" />)}
+          {commentsLoading && Array.from({ length: 8 }).map((_, index) => <Skeleton key={index} height="68px" />)}
         </CommentsContainer>
 
         {(!isNoMoreComments && !isError) &&

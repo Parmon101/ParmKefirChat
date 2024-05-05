@@ -84,8 +84,8 @@ export const Comment = memo(({ comment, depth = 0 }: CommentProps) => {
           <Avatar size={68} src={comment.author?.avatar} />
         </AvatarColumn>
         <ProfileColumn>
-          <Text lineHeight="22px" fontWeight="700">{comment.author?.name}</Text>
-          <Text color="#8297AB" fontWeight="400" lineHeight="19px">{formatDate(comment.created)}</Text>
+          <Text line="22px" fontWeight="700">{comment.author?.name}</Text>
+          <Text color="#8297AB" fontWeight="400" line="19px">{formatDate(comment.created)}</Text>
         </ProfileColumn>
         <ImageWrapperColumn>
           <HeartIconWrapper>
@@ -103,7 +103,7 @@ export const Comment = memo(({ comment, depth = 0 }: CommentProps) => {
           </Text>
         </ImageWrapperColumn>
         <CommentText>
-          <Text lineHeight="19px" fontWeight="400">
+          <Text line="19px" fontWeight="400">
             {comment.text}
           </Text>
         </CommentText>
