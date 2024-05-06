@@ -1,14 +1,14 @@
 {
   "files": {
-    "main.css": "/static/css/main.212275fc.css",
-    "main.js": "/static/js/main.c8f26967.js",
-    "static/media/han-solo.jpg": "/static/media/han-solo.84705bac66e252072c67.jpg",
-    "index.html": "/index.html",
-    "main.212275fc.css.map": "/static/css/main.212275fc.css.map",
-    "main.c8f26967.js.map": "/static/js/main.c8f26967.js.map"
+    "main.css": "/ParmKefirChat/static/css/main.212275fc.css",
+    "main.js": "/ParmKefirChat/static/js/main.cf09b341.js",
+    "static/media/han-solo.jpg": "/ParmKefirChat/static/media/han-solo.84705bac66e252072c67.jpg",
+    "index.html": "/ParmKefirChat/index.html",
+    "main.212275fc.css.map": "/ParmKefirChat/static/css/main.212275fc.css.map",
+    "main.cf09b341.js.map": "/ParmKefirChat/static/js/main.cf09b341.js.map"
   },
   "entrypoints": [
     "static/css/main.212275fc.css",
-    "static/js/main.c8f26967.js"
+    "static/js/main.cf09b341.js"
   ]
 }
